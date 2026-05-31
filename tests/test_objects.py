@@ -3,7 +3,7 @@ import io
 from minio.error import S3Error
 
 
-SAMPLE_DATA = b"Hello from IBM Storage Test!"
+SAMPLE_DATA = b"Hello from Storage Test!"
 SAMPLE_FILENAME = "test-file.txt"
 
 
