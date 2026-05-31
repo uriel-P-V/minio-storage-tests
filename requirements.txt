@@ -1,3 +1,4 @@
 pytest
 minio
 pytest-cov
+pytest-benchmark
