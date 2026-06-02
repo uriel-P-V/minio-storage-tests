@@ -41,7 +41,26 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run all tests
-        run: pytest tests/ -v --tb=short
+        run: pytest tests/ -v --tb=short --alluredir=allure-results
 
       - name: Run with coverage
         run: pytest tests/ --cov=tests --cov-report=term-missing
+
+      - name: Install Allure CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y default-jre
+          curl -o allure.tgz -L https://github.com/allure-framework/allure2/releases/download/2.27.0/allure-2.27.0.tgz
+          tar -zxvf allure.tgz
+          sudo mv allure-2.27.0 /opt/allure
+          sudo ln -s /opt/allure/bin/allure /usr/bin/allure
+
+      - name: Generate Allure Report
+        run: |
+          allure generate allure-results --clean -o allure-report
+
+      - name: Deploy Allure Report to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./allure-report

@@ -2,3 +2,4 @@ pytest
 minio
 pytest-cov
 pytest-benchmark
+allure-pytest
