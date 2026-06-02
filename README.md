@@ -5,7 +5,8 @@
 A storage test suite for MinIO object storage —
 demonstrates real storage operations testing with Pytest,
 including bucket lifecycle, object CRUD, performance benchmarks,
-and a fully containerized CI/CD pipeline with Docker.
+parametrized multi-size uploads, and a fully containerized CI/CD pipeline
+with Docker and Allure Reports.
 
 ---
 
@@ -15,12 +16,13 @@ and a fully containerized CI/CD pipeline with Docker.
 minio-storage-tests/
 ├── .github/
 │   └── workflows/
-│       └── tests.yml          ← GitHub Actions CI with Docker + MinIO
+│       └── tests.yml          ← GitHub Actions CI with Docker + MinIO + Allure
 ├── tests/
-│   ├── conftest.py            ← MinIO client fixture and test bucket fixture
+│   ├── conftest.py            ← Session-scoped MinIO client fixture and test bucket fixture
 │   ├── test_buckets.py        ← Bucket CRUD and error handling
-│   ├── test_objects.py        ← Object upload, download, list, delete
+│   ├── test_objects.py        ← Object upload, download, list, delete + parametrized sizes
 │   └── test_performance.py    ← Latency benchmarks with pytest-benchmark
+├── pytest.ini                 ← Marker definitions (smoke, regression)
 └── requirements.txt
 ```
 
@@ -29,9 +31,13 @@ minio-storage-tests/
 ## Features
 
 - **Real storage testing** — tests run against a live MinIO instance
+- **Smoke & regression markers** — organized test execution with `pytest -m smoke` or `pytest -m regression`
+- **Parametrized size testing** — upload tested with 1KB, 10KB and 100KB files automatically
+- **Session-scoped fixture** — single MinIO connection shared across all tests for efficiency
 - **Fixture with yield** — test bucket created before and cleaned up after each test
 - **Error handling** — S3Error on duplicate buckets and missing objects
 - **Performance benchmarks** — latency for upload, download and bucket creation
+- **Allure Reports** — visual test report published to GitHub Pages after every CI run
 - **Dockerized CI** — MinIO started via `docker run` in GitHub Actions pipeline
 
 ---
@@ -50,6 +56,7 @@ minio-storage-tests/
 | Delete object | test_objects.py | Object removed from bucket |
 | List objects | test_objects.py | Multiple objects appear in list |
 | Missing object | test_objects.py | S3Error on GET nonexistent |
+| Upload various sizes | test_objects.py | 1KB, 10KB, 100KB parametrized upload |
 | Upload latency | test_performance.py | Mean < 200ms |
 | Download latency | test_performance.py | Mean < 200ms |
 | Bucket creation latency | test_performance.py | Mean < 500ms |
@@ -93,6 +100,12 @@ pytest tests/ -v
 # All tests
 pytest tests/ -v
 
+# Smoke tests only (fast sanity checks)
+pytest -m smoke -v
+
+# Regression tests only (full suite)
+pytest -m regression -v
+
 # Buckets only
 pytest tests/test_buckets.py -v
 
@@ -104,13 +117,16 @@ pytest tests/test_performance.py -v
 
 # With coverage
 pytest tests/ --cov=tests --cov-report=term-missing
+
+# Generate Allure results locally
+pytest tests/ --alluredir=allure-results
 ```
 
 ---
 
 ## CI/CD Pipeline
 
-GitHub Actions starts a MinIO container before running tests:
+GitHub Actions starts a MinIO container, runs all tests, and publishes an Allure Report to GitHub Pages:
 
 ```yaml
 - name: Start MinIO
@@ -129,17 +145,20 @@ GitHub Actions starts a MinIO container before running tests:
     done
 ```
 
+Allure Report published at: `https://uriel-p-v.github.io/minio-storage-tests`
+
 ---
 
 ## Tech Stack
 
 - **Python 3.11+**
-- **Pytest** — test framework with fixtures and markers
+- **Pytest** — test framework with fixtures, markers and parametrize
 - **MinIO Python SDK** — S3-compatible object storage client
 - **pytest-benchmark** — performance and latency testing
 - **pytest-cov** — coverage reporting
+- **allure-pytest** — visual test reporting
 - **Docker** — containerized MinIO for local and CI environments
-- **GitHub Actions** — CI/CD pipeline
+- **GitHub Actions** — CI/CD pipeline with Allure deployment
 
 ---
 
