@@ -80,3 +80,32 @@ def test_list_multiple_objects(minio_client, test_bucket):
     object_names = [o.object_name for o in objects]
     for f in files:
         assert f in object_names
+
+
+@pytest.mark.regression
+@pytest.mark.parametrize(
+    "size",
+    [
+        1024,      # 1 KB
+        10240,     # 10 KB
+        102400     # 100 KB
+    ]
+)
+def test_upload_various_sizes(minio_client, test_bucket, size):
+    """Objects of different sizes can be uploaded correctly"""
+
+    data = b"x" * size
+    filename = f"file_{size}.txt"
+
+    minio_client.put_object(
+        test_bucket,
+        filename,
+        io.BytesIO(data),
+        len(data)
+    )
+
+    objects = list(minio_client.list_objects(test_bucket))
+    obj = next(o for o in objects if o.object_name == filename)
+
+    assert obj.size == size
+
