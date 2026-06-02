@@ -1,7 +1,7 @@
 import pytest
 from minio import Minio
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def minio_client():
     client = Minio(
         "localhost:9000",
